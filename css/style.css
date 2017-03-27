@@ -1,1 +1,7 @@
 /* Stylesheet by Kayne Neigherbauer, 2017 */
+
+.County {
+    fill: lightgrey;
+    stroke: black;
+    stroke-width: 1px;
+}
