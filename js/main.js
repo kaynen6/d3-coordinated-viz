@@ -30,18 +30,27 @@ function setMap(){
     //use d3.queue to parallelize asyncronus data loading
     d3.queue()
         .defer(d3.csv, "data/attributes.csv") //load attributes from csv
-        .defer(d3.json, "data/topology_wi.topojson") //load topology
+        .defer(d3.json, "data/states.topojson") //load background topology
+        .defer(d3.json, "data/topology_wi.topojson") //load wisconsin topology
         .await(callback);
     
-    function callback(error, csvData, wisconsin){
+    function callback(error, csvData, states, wisconsin){
         //translate topojson
+        var states = topojson.feature(states, states.objects.states);
         var wisCounties = topojson.feature(wisconsin, wisconsin.objects.topology_wi).features;
         console.log(error);
         console.log(csvData);
-        console.log(wisconsin);
+        console.log(states);
         console.log(wisCounties);
         
-        //add info to map
+        //add background states to the map
+        var statesBackground = map.append("path")
+            .datum(states)
+            .attr("class", "states")
+            .attr("d", path);
+        
+        
+        //add wisconsin counties to map
         var counties = map.selectAll(".counties")
             .data(wisCounties)
             .enter()
