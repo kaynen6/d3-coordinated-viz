@@ -60,12 +60,10 @@
             //join csv data to geojson enumeration units
             wisCounties = joinData(wisCounties, csvData);
             
-            //create color scale
+            //create the color scale
             var colorScale = makeColorScale(csvData);
-            
             //add enumeration units to map
-            setEnumerationUnits(wisCounties,map,path);
-            
+            setEnumerationUnits(wisCounties,map,path, colorScale);
             
             
         };
@@ -97,7 +95,7 @@
             return wisCounties;
         };
         //set enumeration units
-        function setEnumerationUnits(wisCounties,map,path){
+        function setEnumerationUnits(wisCounties,map,path, colorScale){
             //add wisconsin counties to map
             var counties = map.selectAll(".counties")
                 .data(wisCounties)
@@ -106,24 +104,48 @@
                 .attr("class", function(d){
                     return d.properties.NAME + " County";
                 })
-                .attr("d",path);
+                .attr("d",path)
+                .style("fill", function(d){
+                    return colorScale(d.properties[expressed]);
+                });
         };
         
         //make the color scale funtion
         function makeColorScale(data){
             var colorClasses = [
-                "#edf8e9"
-                "#bae4b3"
-                "#74c476"
-                "#31a354"
+                "#edf8e9",
+                "#bae4b3",
+                "#74c476",
+                "#31a354",
                 "#006d2c"
             ];
             
             //create color scale generator
             var colorScale = d3.scaleThreshold()
                 .range(colorClasses);
+            //build array of all values of the expressed attribute
+            var domainArray = [];
+            for (var i=0; i<data.length; i++){
+                var val = parseFloat(data[i][expressed]);
+                domainArray.push(val);
+            };
+            //cluster data using kmeans clustering algrithm to create natural breaks classes
+            var clusters = ss.ckmeans(domainArray, 5);
+            console.log(clusters);
+            //reset domain array to cluster minimums
+            domainArray = clusters.map(function(d){
+                return d3.min(d);
+            });
+            //remove the first value from the domain array to create breakpoints
+            domainArray.shift();
+            console.log(domainArray);
             
-        }
+            //assign array of last 4 cluster mins as domain
+            colorScale.domain(domainArray);
+            
+            return colorScale;
+                        
+        };
 
     };
 })();
