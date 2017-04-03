@@ -3,16 +3,25 @@
 .County {
     fill: lightgrey;
     stroke: black;
-    stroke-width: 1px;
+    stroke-width: 0.5px;
+    stroke-linecap: round;
 }
 
 .states {
     fill: beige;
-    stroke: grey;
+    stroke: lightgrey;
     stroke-width: 1px;
 }
 
 .map {
     background-color: lightskyblue;
-    
+    border: thin solid #999;
+    margin: 5px 0 0 20px;
+}
+
+.chart {
+    background-color: lightgray;
+    border: thin solid #999;
+    float: right;
+    margin: 5px 20px 0 0;
 }
