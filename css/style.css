@@ -7,12 +7,12 @@
 }
 
 .states {
-    fill: white;
+    fill: beige;
     stroke: grey;
     stroke-width: 1px;
 }
 
 .map {
-    fill: lightblue;
+    background-color: lightskyblue;
     
 }
