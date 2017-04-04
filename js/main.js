@@ -2,12 +2,13 @@
 (function(){
     //psuedo global variables
     //attributes
-    var attrArray = ["Percent Not in Labor Force", "Median household income", "Percent HH Cash Assist", "Percent HH FS/SNAP", "Per capita income"];
+    var attrArray = ["Percent of Population 16 or Over Not in Labor Force", "Median household income", "Percent of Households Receiving Public Cash Assistance", "Percent of Households Receiving Food Stamps/SNAP", "Per Capita Income"];
     //initial attribute
     var expressed = attrArray[0]; 
 
     //begin script when window loads
     window.onload = setMap();
+    
 
     //set up choropleth map
     function setMap(){
@@ -24,10 +25,10 @@
 
         //create albers EA conic projection centered on wisconsin
         var projection = d3.geoAlbers()
-            .center([0,44.75])
+            .center([0,45])
             .rotate([90,0,0])
             .parallels([43.5,45.5])
-            .scale(6000)
+            .scale(5500)
             .translate([width / 2, height / 2]);
 
         var path = d3.geoPath() //generator for projection
@@ -68,6 +69,10 @@
             
             //add coordinated visualization to the map
             setChart(csvData, colorScale);
+            
+            //call create dropdown
+            createDropdown(csvData);
+            
             
         };
         
@@ -165,7 +170,7 @@
         //function to create coordinated chart
         function setChart(csvData, colorScale){
             //chart frame dimensions
-            var chartWidth = window.innerWidth * 0.525, 
+            var chartWidth = window.innerWidth * 0.550, 
                 chartHeight = 500,
                 leftPadding = 25,
                 rightPadding = 2,
@@ -242,6 +247,57 @@
                 .attr("height", chartInnerHeight)
                 .attr("transform", translate);
         };
+        
+        //function to create a dropdown menu to select attributes
+        function createDropdown(csvData){
+            //add select element
+            var dropdown = d3.select("body")
+                .append("select")
+                .attr("class", "dropdown")
+                .on("change", function(){
+                    changeAttribute(this.value, csvData)
+                });
+            
+            //add ititial option
+            var titleOption = dropdown.append("option")
+                .attr("class", "titleOption")
+                .attr("disabled" , "true")
+                .text("Select Attribute");
+            
+            //add attribute name options
+            var attrOptions = dropdown.selectAll("attrOptions")
+                .data(attrArray)
+                .enter()
+                .append("option")
+                .attr("value", function(d){ return d })
+                .text(function(d){ return d });
+        };
+        
+        //dropdown change listener handler
+        function changeAttribute(attribute, csvData){
+            //change the expressed attr
+            expressed = attribute;
+
+            //recreate the color scale
+            var colorScale = makeColorScale(csvData);
+            //recolor the enumeration units
+            var counties = d3.selectAll(".County")
+                .style("fill", function(d){
+                    return choropleth(d.properties, colorScale)      
+                });
+        };
+        
 
     };
+    
+    
+    
+    
+    ///FIGURE OUT HOW TO MAKE THIS WORK RIGHT
+    //add listener to redraw map on window resize
+    //window.onresize = function(){
+    //    //redraw the map here
+    //    setMap();
+    //};
+
 })();
