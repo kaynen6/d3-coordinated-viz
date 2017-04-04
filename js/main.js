@@ -12,7 +12,7 @@
     //set up choropleth map
     function setMap(){
         //map frame dimensions
-        var width = window.innerWidth * 0.5,
+        var width = window.innerWidth * 0.4,
             height = 500;
 
         //create new svg container
@@ -165,8 +165,14 @@
         //function to create coordinated chart
         function setChart(csvData, colorScale){
             //chart frame dimensions
-            var chartWidth = window.innerWidth * 0.425, 
-                chartHeight = 500;
+            var chartWidth = window.innerWidth * 0.525, 
+                chartHeight = 500,
+                leftPadding = 25,
+                rightPadding = 2,
+                topBottomPadding = 5,
+                chartInnerWidth = chartWidth - leftPadding - rightPadding,
+                chartInnerHeight = chartHeight - topBottomPadding * 2,
+                translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
             
             //create second svg element to hold the chart
             var chart = d3.select("body")
@@ -175,32 +181,66 @@
                 .attr("height", chartHeight)
                 .attr("class", "chart");
             
+            //create a rectangle for chart background fill
+            var chartBackground = chart.append("rect")
+                .attr("class", "chartBackground")
+                .attr("width", chartInnerWidth)
+                .attr("height", chartInnerHeight)
+                .attr("transform", translate);
+
             //create a scale to size bars proportionally to frame
             var yScale = d3.scaleLinear()
-                .range([0, chartHeight])
-                .domain([0, 105]);
+                .range([490, 0])
+                .domain([0, 100]);
             
             //set bars for each county
-            var bars = chart.selectAll(".bars")
+            var bars = chart.selectAll(".bar")
                 .data(csvData)
                 .enter()
                 .append("rect")
+                .sort(function(a,b){
+                    return b[expressed]-a[expressed]
+                })
                 .attr("class",function (d){
-                    return "bars " + d.GEO_id2;
+                    return "bar " + d.GEO_id2;
                 })
-                .attr("width", chartWidth / csvData.length -1)
+                .attr("width", chartInnerWidth / csvData.length -1)
                 .attr("x", function(d, i){
-                    return i *(chartWidth / csvData.length)
+                    return i *(chartInnerWidth / csvData.length) + leftPadding;
                 })
-                .attr("height", function(d){
-                    return yScale(parseFloat(d[expressed]));
+                .attr("height", function(d, i){
+                    return 490 - yScale(parseFloat(d[expressed]));
                 })
-                .attr("y", function(d){
-                    return chartHeight - yScale(parseFloat(d[expressed]));
+                .attr("y", function(d, i){
+                    return yScale(parseFloat(d[expressed])) + topBottomPadding;
                 })
                 .style("fill", function(d){
                     return choropleth(d, colorScale);
                 });
+                        
+            //title that chart
+            var chartTitle = chart.append("text")
+                .attr("x", 40)
+                .attr("y", 40)
+                .attr("class", "chartTitle")
+                .text(expressed + " in Each County");
+            
+            //create vertical axis generator
+            var yAxis = d3.axisLeft()
+                .scale(yScale);
+
+            //place axis
+            var axis = chart.append("g")
+                .attr("class", "axis")
+                .attr("transform", translate)
+                .call(yAxis);
+
+            //create frame for chart border
+            var chartFrame = chart.append("rect")
+                .attr("class", "chartFrame")
+                .attr("width", chartInnerWidth)
+                .attr("height", chartInnerHeight)
+                .attr("transform", translate);
         };
 
     };
