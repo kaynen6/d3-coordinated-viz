@@ -5,7 +5,22 @@
     var attrArray = ["Percent of Population 16 or Over Not in Labor Force", "Median household income", "Percent of Households Receiving Public Cash Assistance", "Percent of Households Receiving Food Stamps/SNAP", "Per Capita Income"];
     //initial attribute
     var expressed = attrArray[0]; 
-
+    
+    //chart frame dimensions
+    var chartWidth = window.innerWidth * 0.550, 
+        chartHeight = 500,
+        leftPadding = 25,
+        rightPadding = 2,
+        topBottomPadding = 5,
+        chartInnerWidth = chartWidth - leftPadding - rightPadding,
+        chartInnerHeight = chartHeight - topBottomPadding * 2,
+        translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
+    
+    //create a scale to size bars proportionally to frame
+    var yScale = d3.scaleLinear()
+        .range([490, 0])
+        .domain([0, 100]);
+    
     //begin script when window loads
     window.onload = setMap();
     
@@ -115,7 +130,15 @@
                 .attr("d",path)
                 .style("fill", function(d){
                     return choropleth(d.properties, colorScale);
+                })
+                .on("mouseover", function(d){
+                    highlight(d.properties);
+                })
+                .on("mouseout", function(d){
+                    dehighlight(d.properties);
                 });
+            var desc = counties.append("desc")
+                .text('{"stroke": "black", "stroke-width": "1px"}');
         };
         
         //make the color scale funtion
@@ -169,16 +192,6 @@
         
         //function to create coordinated chart
         function setChart(csvData, colorScale){
-            //chart frame dimensions
-            var chartWidth = window.innerWidth * 0.550, 
-                chartHeight = 500,
-                leftPadding = 25,
-                rightPadding = 2,
-                topBottomPadding = 5,
-                chartInnerWidth = chartWidth - leftPadding - rightPadding,
-                chartInnerHeight = chartHeight - topBottomPadding * 2,
-                translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
-            
             //create second svg element to hold the chart
             var chart = d3.select("body")
                 .append("svg")
@@ -192,11 +205,6 @@
                 .attr("width", chartInnerWidth)
                 .attr("height", chartInnerHeight)
                 .attr("transform", translate);
-
-            //create a scale to size bars proportionally to frame
-            var yScale = d3.scaleLinear()
-                .range([490, 0])
-                .domain([0, 100]);
             
             //set bars for each county
             var bars = chart.selectAll(".bar")
@@ -210,19 +218,11 @@
                     return "bar " + d.GEO_id2;
                 })
                 .attr("width", chartInnerWidth / csvData.length -1)
-                .attr("x", function(d, i){
-                    return i *(chartInnerWidth / csvData.length) + leftPadding;
-                })
-                .attr("height", function(d, i){
-                    return 490 - yScale(parseFloat(d[expressed]));
-                })
-                .attr("y", function(d, i){
-                    return yScale(parseFloat(d[expressed])) + topBottomPadding;
-                })
-                .style("fill", function(d){
-                    return choropleth(d, colorScale);
-                });
-                        
+                .on("mouseover", highlight)
+                .on("mouseout", dehighlight);
+            
+            var desc = bars.append("desc")
+                .text('{"stroke": "none", "stroke-width": "0px"}');
             //title that chart
             var chartTitle = chart.append("text")
                 .attr("x", 40)
@@ -246,6 +246,9 @@
                 .attr("width", chartInnerWidth)
                 .attr("height", chartInnerHeight)
                 .attr("transform", translate);
+            
+            //set bar positions, heights, and colors
+            updateChart(bars, csvData.length, colorScale);
         };
         
         //function to create a dropdown menu to select attributes
@@ -277,7 +280,6 @@
         function changeAttribute(attribute, csvData){
             //change the expressed attr
             expressed = attribute;
-
             //recreate the color scale
             var colorScale = makeColorScale(csvData);
             //recolor the enumeration units
@@ -285,6 +287,61 @@
                 .style("fill", function(d){
                     return choropleth(d.properties, colorScale)      
                 });
+            //re-sort, resize, and recolor the bars
+            var bars = d3.selectAll(".bar")
+                //re-sort the bars
+                .sort(function(a,b){
+                    return b[expressed] - a[expressed];
+                });
+            
+            updateChart(bars, csvData.length, colorScale);
+        };
+        
+        function updateChart(bars, n, colorScale){
+            //position bars
+            bars.attr("x", function(d,i){
+                return i * (chartInnerWidth / n) + leftPadding;
+            })
+            //size/resize bars
+            .attr("height", function(d, i){
+                return 463 - yScale(parseFloat(d[expressed]));
+            })
+            .attr("y", function(d, i){
+                return yScale(parseFloat(d[expressed])) + topBottomPadding;
+            })
+            .style("fill", function(d){
+                return choropleth(d, colorScale);
+            });
+                   
+            var chartTitle = d3.select(".chartTitle")
+                .text(expressed + " in Each County");
+        };
+        
+        //highlight function changes the stroke of object mouseover'd
+        function highlight(props){
+            //change stroke
+            var selected = d3.selectAll("." + props.NAME)
+                .style("stroke","blue")
+                .style("stroke-width", "2");
+        };
+        
+        function dehighlight(props){
+            var selected = d3.selectAll("." + props.NAME)
+                .style("stroke", function(){
+                    return getStyle(this, "stroke")
+                })
+                .style("stroke-width", function(){
+                    return getStyle(this, "stroke-width")
+                });
+
+            function getStyle(element, styleName){
+                var styleText = d3.select(element)
+                    .select("desc")
+                    .text();
+                var styleObject = JSON.parse(styleText);
+                
+                return styleObject[styleName];
+            };
         };
         
 
