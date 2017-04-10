@@ -215,7 +215,7 @@
                     return b[expressed]-a[expressed]
                 })
                 .attr("class",function (d){
-                    return "bar " + d.GEO_id2;
+                    return "bar" + d.GEO_id2;
                 })
                 .attr("width", chartInnerWidth / csvData.length -1)
                 .on("mouseover", highlight)
@@ -320,19 +320,46 @@
         //highlight function changes the stroke of object mouseover'd
         function highlight(props){
             //change stroke
-            var selected = d3.selectAll("." + props.NAME)
-                .style("stroke","blue")
-                .style("stroke-width", "2");
+            console.log(props);
+            setLabel(props);
+            if (props.NAME){
+                var county = props.NAME.replace(/ /g, '')
+                var selected = d3.selectAll("." + county)
+                    .style("stroke","blue")
+                    .style("stroke-width", "2");
+            }
+            else    {
+                var selected = d3.selectAll(".bar" + props.GEO_id2)
+                    .style("stroke","blue")
+                    .style("stroke-width", "2");
+            };
+            
+            
         };
         
         function dehighlight(props){
-            var selected = d3.selectAll("." + props.NAME)
-                .style("stroke", function(){
+            console.log(props)
+            if (props.NAME){
+                var county = props.NAME.replace(/ /g, '');
+                var selected = d3.selectAll("." + county)
+                    .style("stroke", function(){
                     return getStyle(this, "stroke")
                 })
                 .style("stroke-width", function(){
                     return getStyle(this, "stroke-width")
                 });
+            }
+            
+            else    {
+                var selected = d3.selectAll(".bar" + props.GEO_id2)
+                    .style("stroke", function(){
+                    return getStyle(this, "stroke")
+                })
+                    .style("stroke-width", function(){
+                    return getStyle(this, "stroke-width")
+                });    
+                
+            };
 
             function getStyle(element, styleName){
                 var styleText = d3.select(element)
@@ -342,6 +369,26 @@
                 
                 return styleObject[styleName];
             };
+            
+            d3.select(".infolabel")
+                .remove();
+        };
+        
+        //function to create dynamic labels
+        function setLabel(props){
+            //content
+            var labelAttribute = "<h1>" + props[expressed] + "</h1><b>" + expressed + "</b>";
+            
+            //create info label div
+            var infolabel = d3.select("body")
+                .append("div")
+                .attr("class", "infolabel")
+                .attr("id", props.NAME + "_label")
+                .html(labelAttribute);
+            
+            var countyName = infolabel.append("div")
+                .attr("class", "labelname")
+                .html(props.NAME);
         };
         
 

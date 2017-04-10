@@ -1,5 +1,12 @@
 /* Stylesheet by Kayne Neigherbauer, 2017 */
 
+/*/[class^='County']{
+    fill: lightgrey;
+    stroke: black;
+    stroke-width: 1px;
+    stroke-linecap: round;
+}
+*/
 .County {
     fill: lightgrey;
     stroke: black;
@@ -80,4 +87,26 @@
 option {
     font-weight: normal;
     width: auto;
+}
+
+.infolabel {
+    position: absolute;
+    height: 50px;
+    min-width: 100px;
+    color: black;
+    background-color: beige;
+    border: solid thin black;
+    padding: 5px 10px;
+}
+
+.infolabel h1 {
+    margin: 0 20px 0 0;
+    padding: 0;
+    display: inline-block;
+    line-height: 1em;
+    
+}
+
+.labelname {
+    
 }
