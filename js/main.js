@@ -2,7 +2,7 @@
 (function(){
     //psuedo global variables
     //attributes
-    var attrArray = ["Percent of Population 16 or Over Not in Labor Force", "Median household income", "Percent of Households Receiving Public Cash Assistance", "Percent of Households Receiving Food Stamps/SNAP", "Per Capita Income"];
+    var attrArray = ["Percent of Population 16 or Over Not in Labor Force", "Median Household Income - Thousands of Dollars", "Percent of Households Receiving Public Cash Assistance", "Percent of Households Receiving Food Stamps/SNAP", "Per Capita Income - Thousands of Dollars"];
     //initial attribute
     var expressed = attrArray[0]; 
     
@@ -18,7 +18,7 @@
     
     //create a scale to size bars proportionally to frame
     var yScale = d3.scaleLinear()
-        .range([490, 0])
+        .range([chartHeight, topBottomPadding])
         .domain([0, 100]);
     
     //begin script when window loads
@@ -96,7 +96,7 @@
             //loop through csvData to assign values to geojson county
             for (var i=0; i<csvData.length; i++){
                 var csvCounty = csvData[i]; //current county entry in CSV
-                var csvKey = csvCounty.GEO_id2; //CSV primary key
+                var csvKey = csvCounty.GEOID; //CSV primary key
                 //loop through the geojson data to match county
                 for (var a=0; a<wisCounties.length; a++){
                     //the current county properties
@@ -125,7 +125,7 @@
                 .enter()
                 .append("path")
                 .attr("class", function(d){
-                    return d.properties.NAME + " County";
+                    return d.properties.GEOID + " County";
                 })
                 .attr("d",path)
                 .style("fill", function(d){
@@ -136,7 +136,8 @@
                 })
                 .on("mouseout", function(d){
                     dehighlight(d.properties);
-                });
+                })
+                .on("mousemove", moveLabel);
             var desc = counties.append("desc")
                 .text('{"stroke": "black", "stroke-width": "1px"}');
         };
@@ -207,7 +208,7 @@
                 .attr("transform", translate);
             
             //set bars for each county
-            var bars = chart.selectAll(".bar")
+            var bars = chart.selectAll(".Bar")
                 .data(csvData)
                 .enter()
                 .append("rect")
@@ -215,11 +216,12 @@
                     return b[expressed]-a[expressed]
                 })
                 .attr("class",function (d){
-                    return "bar" + d.GEO_id2;
+                    return d.GEOID + " Bar";
                 })
                 .attr("width", chartInnerWidth / csvData.length -1)
                 .on("mouseover", highlight)
-                .on("mouseout", dehighlight);
+                .on("mouseout", dehighlight)
+                .on("mousemove", moveLabel);
             
             var desc = bars.append("desc")
                 .text('{"stroke": "none", "stroke-width": "0px"}');
@@ -284,15 +286,22 @@
             var colorScale = makeColorScale(csvData);
             //recolor the enumeration units
             var counties = d3.selectAll(".County")
+                .transition()
+                .duration(700)
                 .style("fill", function(d){
                     return choropleth(d.properties, colorScale)      
                 });
             //re-sort, resize, and recolor the bars
-            var bars = d3.selectAll(".bar")
+            var bars = d3.selectAll(".Bar")
                 //re-sort the bars
                 .sort(function(a,b){
                     return b[expressed] - a[expressed];
-                });
+                })
+                .transition()
+                .delay(function(d,i){
+                    return i * 20
+                })
+                .duration(500);
             
             updateChart(bars, csvData.length, colorScale);
         };
@@ -321,46 +330,23 @@
         function highlight(props){
             //change stroke
             console.log(props);
-            setLabel(props);
-            if (props.NAME){
-                var county = props.NAME.replace(/ /g, '')
-                var selected = d3.selectAll("." + county)
-                    .style("stroke","blue")
-                    .style("stroke-width", "2");
-            }
-            else    {
-                var selected = d3.selectAll(".bar" + props.GEO_id2)
-                    .style("stroke","blue")
-                    .style("stroke-width", "2");
-            };
-            
-            
+            setLabel(props)
+            var selected = d3.selectAll("." + props.GEOID)
+                .style("stroke","blue")
+                .style("stroke-width", "2");
         };
+        
         
         function dehighlight(props){
             console.log(props)
-            if (props.NAME){
-                var county = props.NAME.replace(/ /g, '');
-                var selected = d3.selectAll("." + county)
-                    .style("stroke", function(){
+            var selected = d3.selectAll("." + props.GEOID)
+                .style("stroke", function(){
                     return getStyle(this, "stroke")
                 })
                 .style("stroke-width", function(){
                     return getStyle(this, "stroke-width")
-                });
-            }
-            
-            else    {
-                var selected = d3.selectAll(".bar" + props.GEO_id2)
-                    .style("stroke", function(){
-                    return getStyle(this, "stroke")
-                })
-                    .style("stroke-width", function(){
-                    return getStyle(this, "stroke-width")
-                });    
-                
-            };
-
+                });       
+           
             function getStyle(element, styleName){
                 var styleText = d3.select(element)
                     .select("desc")
@@ -388,7 +374,18 @@
             
             var countyName = infolabel.append("div")
                 .attr("class", "labelname")
-                .html(props.NAME);
+                .html(props.NAME + " County");
+        };
+        
+        //function to move label with mouse
+        function moveLabel(){
+            //use coordinates of mousemove event to set label coordinates
+            var x = d3.event.clientX + 10,
+                y = d3.event.clientY - 75;
+            
+            d3.select(".infolabel")
+                .style("left", x + "px")
+                .style("top", y + "px");
         };
         
 

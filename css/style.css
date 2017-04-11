@@ -15,7 +15,7 @@
 }
 
 .states {
-    fill: beige;
+    fill: #669999;
     stroke: lightgray;
     stroke-width: 1px;
 }
@@ -47,12 +47,13 @@
 }
 
 .chartBackground {
-    fill: beige;
+    fill: #669999;
 }
+
 .chartFrame {
     fill: none;
     stroke: lightgray;
-    stroke-width: 3px;
+    stroke-width: 5px;
     shape-rendering: crispEdges;
 }
 
@@ -94,13 +95,14 @@ option {
     height: 50px;
     min-width: 100px;
     color: black;
-    background-color: beige;
+    background-color: lightgray;
     border: solid thin black;
     padding: 5px 10px;
+    
 }
 
 .infolabel h1 {
-    margin: 0 20px 0 0;
+    margin: 0px 20px 0 0;
     padding: 0;
     display: inline-block;
     line-height: 1em;
