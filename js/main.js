@@ -125,7 +125,7 @@
                 .enter()
                 .append("path")
                 .attr("class", function(d){
-                    return d.properties.GEOID + " County";
+                    return "c" + d.properties.GEOID + " County";
                 })
                 .attr("d",path)
                 .style("fill", function(d){
@@ -216,7 +216,7 @@
                     return b[expressed]-a[expressed]
                 })
                 .attr("class",function (d){
-                    return d.GEOID + " Bar";
+                    return "c" + d.GEOID + " Bar";
                 })
                 .attr("width", chartInnerWidth / csvData.length -1)
                 .on("mouseover", highlight)
@@ -313,7 +313,7 @@
             })
             //size/resize bars
             .attr("height", function(d, i){
-                return 463 - yScale(parseFloat(d[expressed]));
+                return chartInnerHeight - yScale(parseFloat(d[expressed]));
             })
             .attr("y", function(d, i){
                 return yScale(parseFloat(d[expressed])) + topBottomPadding;
@@ -331,7 +331,7 @@
             //change stroke
             console.log(props);
             setLabel(props)
-            var selected = d3.selectAll("." + props.GEOID)
+            var selected = d3.selectAll("." + "c" + props.GEOID)
                 .style("stroke","blue")
                 .style("stroke-width", "2");
         };
@@ -339,7 +339,7 @@
         
         function dehighlight(props){
             console.log(props)
-            var selected = d3.selectAll("." + props.GEOID)
+            var selected = d3.selectAll("." + "c" + props.GEOID)
                 .style("stroke", function(){
                     return getStyle(this, "stroke")
                 })
@@ -355,9 +355,10 @@
                 
                 return styleObject[styleName];
             };
-            
             d3.select(".infolabel")
                 .remove();
+            
+            
         };
         
         //function to create dynamic labels
@@ -369,7 +370,7 @@
             var infolabel = d3.select("body")
                 .append("div")
                 .attr("class", "infolabel")
-                .attr("id", props.NAME + "_label")
+                .attr("id", props.NAME)
                 .html(labelAttribute);
             
             var countyName = infolabel.append("div")
@@ -390,15 +391,29 @@
         
 
     };
+    //function that moves the label if near edge
+    function moveLabel(){
+        //get label width
+        var labelWidth = d3.select(".infolabel")
+            .node()
+            .getBoundingClientRect()
+            .width;
+        
+        //use coordinates of mouse move event to set label coordinates
+        var x1 = d3.event.clientX + 20,
+            y1 = d3.event.clientY - 75,
+            x2 = d3.event.clientX - labelWidth - 20,
+            y2 = d3.event.clientY + 25;
+        
+        //horizontal label coordinate, testing for overflow
+        var x = d3.event.clientX > window.innerWidth - labelWidth - 20 ? x2: x1;
+        //vert label coordinate testing for overflow
+        var y = d3.event.clientY < 75 ? y2: y1;
+        
+        d3.select(".infolabel")
+            .stlye("left", x + "px")
+            .style("top", y + "px");
+    };
+  
     
-    
-    
-    
-    ///FIGURE OUT HOW TO MAKE THIS WORK RIGHT
-    //add listener to redraw map on window resize
-    //window.onresize = function(){
-    //    //redraw the map here
-    //    setMap();
-    //};
-
-})();
+ })();

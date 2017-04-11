@@ -98,6 +98,8 @@ option {
     background-color: lightgray;
     border: solid thin black;
     padding: 5px 10px;
+    top: -75;
+    z-index: 50;
     
 }
 
